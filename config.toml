@@ -1,0 +1,11 @@
+title = "Primary Care Workforce Dashboard"
+
+[database]
+sql_database = "Data_Lab_NCL_Dev"
+sql_schema = "JakeK"
+
+[gpw]
+
+[gpw.main]
+sql_table = "wf_pc_gpw_main"
+
