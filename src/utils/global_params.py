@@ -18,7 +18,9 @@ def import_settings(config, ds):
                 "SQL_ADDRESS": getenv("SQL_ADDRESS"),
                 "SQL_DATABASE": config["database"]["sql_database"],
                 "SQL_SCHEMA": config["database"]["sql_schema"],
-                "SQL_TABLE": config["gpw"]["main"]["sql_table"],
+                "SQL_TABLE": config["gpw"]["main"]["sql_table_main"],
+
+                "SQL_TABLE_COLUMNMAP": config["gpw"]["main"]["sql_table_columnmap"],
 
                 "DATA_DIRECTORY": getenv("NETWORKED_DATA_PATH_DATA") 
                     + getenv("NETWORKED_DATA_PATH__SUBDRIECTORY_GPW")
