@@ -7,6 +7,7 @@ sql_schema = "JakeK"
 [gpw]
 
 [gpw.main]
+pipeline_name = "GPW Main Data"
 sql_table_main = "wf_pc_pcwd_gpw_main"
 sql_table_columnmap = "wf_pc_pcwd_columnmap"
 

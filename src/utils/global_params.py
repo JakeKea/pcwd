@@ -15,6 +15,9 @@ def import_settings(config, ds):
     
     elif ds == "gpw_main":
         params_gpw ={
+
+                "PIPELINE_NAME": config["gpw"]["main"]["pipeline_name"],
+
                 "SQL_ADDRESS": getenv("SQL_ADDRESS"),
                 "SQL_DATABASE": config["database"]["sql_database"],
                 "SQL_SCHEMA": config["database"]["sql_schema"],
