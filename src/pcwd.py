@@ -14,20 +14,42 @@ from utils.network_management import *
 from utils.sandpit_management import *
 
 #Get the date from a given filename
-def get_date_from_filename(ndf):
+def get_date_from_filename(ndf, inc_day=False):
     
     #Look for the file date in the file name
     #This should be in the form of "{Month} {YYYY}", i.e. "March 2024"
     for month in calendar.month_name[1:]:
         if month in ndf:
-            month_idx_end = ndf.find(month) + len(month) + 1
+            #Get the year from the file name
+            month_idx_start = ndf.find(month)
+            month_idx_end = month_idx_start + len(month) + 1
             year_candidate = ndf[month_idx_end: month_idx_end + 4]
 
             #Check the characters following the month is a year
             if bool(re.fullmatch(r'\d{4}', year_candidate)):
+
+                #If needed, get the day (for the NWRS files)
+                if inc_day:
+                    #Get the day from the file name
+                    day_candidate = ndf[month_idx_start-3:month_idx_start-1]
+
+                    #Check the characters are a numeric value
+                    if bool(re.fullmatch(r'\d{2}', day_candidate)):
+                        date_in_file = (
+                            day_candidate + " " + month + " " + year_candidate)
+                        file_date_date = datetime.strptime(
+                            date_in_file, '%d %B %Y')
+                        file_date_str = file_date_date.strftime("%Y-%m-%d")
+                        #Convert to formatted date string (YYYY-MM-DD)
+                        return file_date_str
+                    else:
+                        break
+                
+                #Convert to formatted date string (YYYY-MM-DD)
                 date_in_file = month + " " + year_candidate
                 file_date_date = datetime.strptime(date_in_file, '%B %Y')
                 file_date_str = file_date_date.strftime("%Y-%m-%d")
+
                 return file_date_str
             
     print(f"Warning! No date found in the filename of '{ndf}'",
@@ -147,3 +169,4 @@ if env_debug["DEBUG_PCN"]:
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
                 upload_pipeline_data(env_gpw_pcn_out, env_gpw_pcn)
+
