@@ -7,55 +7,6 @@ from datetime import datetime
 def filter_ncl(data):
     return data.copy().loc[data["ICB_CODE"] == "QMJ"]
 
-def filter_noise(data):
-
-    all_columns = data.columns.tolist()
-
-    #Unused Context Columns
-
-    #Gender Columns
-    gender_columns = []
-    gender_columns += (
-        [entry for entry in all_columns if entry.startswith("MALE_")])
-    gender_columns += (
-        [entry for entry in all_columns if entry.startswith("FEMALE_")])
-    gender_columns += ["TOTAL_MALE", "TOTAL_FEMALE"]
-
-    data.drop(columns=gender_columns, inplace=True)
-    all_columns = data.columns.tolist()
-
-    #Total Patient Column 
-    #(other patients columns are removed with the gender filter)
-    data.drop(columns="TOTAL_PATIENTS", inplace=True)
-
-    #Ethnicity (COQ) Columns
-    coq_columns_all = [entry for entry in all_columns if "_COQ_" in entry]
-        
-
-    data.drop(columns=coq_columns_all, inplace=True)
-    all_columns = data.columns.tolist()
-
-    #Age columns (This is done by looking for a suffix after FTE and HC)
-    age_columns = (
-        [entry for entry in all_columns
-         if "_FTE_" in entry or "_HC_" in entry]
-    )
-
-    data.drop(columns=age_columns, inplace=True)
-    all_columns = data.columns.tolist()
-
-    return data
-
-    gender_columns = data.copy().filter(like="MALE_").columns.tolist()
-    gender_columns += data.copy().filter(like="FEMALE_").columns.tolist()
-    gender_columns += ["TOTAL_MALE", "TOTAL_FEMALE"]
-
-    print(gender_columns)
-
-    data.drop(columns=gender_columns, inplace=True)
-
-    return data
-
 #Function that trims the list of all columns to just the staff roles
 def read_staff_roles(all_columns):
 
@@ -129,8 +80,8 @@ def flag_deprecated_column(sr, env):
 #Process the main data from the gpw file
 def process_gpw_main(data, date_data, env):
     
-
     #Remap column names for old/new files
+    #Not currently implemented
 
     #Filter to NCL only
     df_gpw_ncl = filter_ncl(data)
@@ -138,7 +89,6 @@ def process_gpw_main(data, date_data, env):
     #Identify relevant columns
     gpw_context_cols = ["PRAC_CODE", "PRAC_NAME"]
     gpw_sr_cols = read_staff_roles(df_gpw_ncl.columns.tolist())
-
 
     #Assess list of staff role columns
     ##Get existing mapping
@@ -178,6 +128,8 @@ def process_gpw_main(data, date_data, env):
 
     #Remove rows with NULL SIP
     df_gpw_output = df_gpw_output.dropna(subset=['staff_in_post'])
+    #Remove rows with 0 SIP
+    df_gpw_output = df_gpw_output[df_gpw_output['staff_in_post'] != 0]
 
     #Return data
     return df_gpw_output
