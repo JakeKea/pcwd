@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 from utils.global_params import *
 from utils.gpw_main import *
+from utils.gpw_age import *
+from utils.pcn import *
 from utils.network_management import *
 from utils.sandpit_management import *
 
@@ -62,7 +64,12 @@ if env_debug["DEBUG_GPW_MAIN"]:
         if file_date:
             #Fetch the data file
             file_path = env_gpw_main["DATA_DIRECTORY"] + ndf
-            df_gpw_data = pd.read_csv(file_path)
+            
+            #Sometimes the file has inconsistent encoding so try both
+            try:
+                df_gpw_data = pd.read_csv(file_path)
+            except:
+                df_gpw_data = pd.read_csv(file_path, encoding='ISO-8859-1')
 
             #Run main pipeline processing function
             df_gpw_main = process_gpw_main(df_gpw_data, file_date, env_gpw_main)
@@ -71,3 +78,72 @@ if env_debug["DEBUG_GPW_MAIN"]:
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
                 upload_pipeline_data(df_gpw_main, env_gpw_main)
+
+#GPW Age Pipeline
+if env_debug["DEBUG_GPW_AGE"]:
+    print("#########   Processing GPW Age Pipeline   #########")
+
+    #Load pipeline env
+    env_gpw_age = import_settings(config, "gpw_age")
+
+    #Get data files:
+    ndfs = fetch_new_files(env_gpw_age["DATA_DIRECTORY"], ext=".csv")
+
+    #For each new file, execute the pipeline
+    for ndf in ndfs:
+
+        #Confirm the ndf has the time period in the name
+        file_date = get_date_from_filename(ndf)
+        
+        if file_date:
+            #Fetch the data file
+            file_path = env_gpw_age["DATA_DIRECTORY"] + ndf
+
+            #Sometimes the file has inconsistent encoding so try both
+            try:
+                df_gpw_data = pd.read_csv(file_path)
+            except:
+                df_gpw_data = pd.read_csv(file_path, encoding='ISO-8859-1')
+
+            #Run main pipeline processing function
+            df_gpw_age = process_gpw_age(df_gpw_data, file_date, env_gpw_age)
+
+            #If enabled, upload the output data
+            if env_debug["DEBUG_UPLOAD"]:
+                #Upload resulting dataframe
+                upload_pipeline_data(df_gpw_age, env_gpw_age)
+
+#PCN Pipeline
+if env_debug["DEBUG_PCN"]:
+    print("#########   Processing PCN Pipeline   #########")
+
+    #Load pipeline env
+    env_gpw_pcn = import_settings(config, "pcn")
+
+    #Get data files:
+    ndfs = fetch_new_files(env_gpw_pcn["DATA_DIRECTORY"], ext=".csv")
+
+    #For each new file, execute the pipeline
+    for ndf in ndfs:
+
+        #Confirm the ndf has the time period in the name
+        file_date = get_date_from_filename(ndf)
+        
+        if file_date:
+            #Fetch the data file
+            file_path = env_gpw_pcn["DATA_DIRECTORY"] + ndf
+
+            #Sometimes the file has inconsistent encoding so try both
+            try:
+                env_gpw_pcn_in = pd.read_csv(file_path)
+            except:
+                env_gpw_pcn_in = pd.read_csv(file_path, encoding='ISO-8859-1')
+
+            #Run main pipeline processing function
+            env_gpw_pcn_out = process_pcn(
+                env_gpw_pcn_in, file_date, env_gpw_pcn)
+
+            #If enabled, upload the output data
+            if env_debug["DEBUG_UPLOAD"]:
+                #Upload resulting dataframe
+                upload_pipeline_data(env_gpw_pcn_out, env_gpw_pcn)
