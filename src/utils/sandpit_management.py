@@ -18,9 +18,17 @@ def upload_pipeline_data(data, env, chunks=100):
         snips.upload_to_sql(data, engine, env["SQL_TABLE"], env["SQL_SCHEMA"], 
                             replace=False, chunks=chunks)
 
+        print(f"\n{pipeline} pipeline data uploaded successfully.\n")
+
     except pyodbc.OperationalError:
         print(f"\nConnection issue when uploading the {pipeline} pipeline.\n")
     except sqlalchemy.exc.IntegrityError:
-         print(f"\nDuplicate data issue when uploading the {pipeline} pipeline.\n")
+        print("\nDuplicate data issue when", 
+               f"uploading the {pipeline} pipeline.\n")
+    except sqlalchemy.exc.DataError:
+        print(f"\nIssue with a new column name being too long for {pipeline}",
+              "pipeline. Fix this by editing the column in the destination",
+              "table for this pipeline to allow for longer values.\n")
+
     except pyodbc.ProgrammingError as e:
         raise Exception (e)
