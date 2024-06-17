@@ -1,4 +1,4 @@
---Statement to create the table for main gpw data
+--Statement to create the table for pcn data
 CREATE TABLE [Data_Lab_NCL_Dev].[JakeK].[wf_pc_pcwd_pcn] (
 	date_extract DATE NOT NULL,
 	date_data DATE NOT NULL,
