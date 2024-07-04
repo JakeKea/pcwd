@@ -59,5 +59,18 @@ def import_settings(config, ds):
         }
         return params_pcn
 
+    elif ds == "nwrs":
+        params_nwrs={
+            "PIPELINE_NAME": config["nwrs"]["pipeline_name"],
+
+            "SQL_ADDRESS": getenv("SQL_ADDRESS"),
+            "SQL_DATABASE": config["database"]["sql_database"],
+            "SQL_SCHEMA": config["database"]["sql_schema"],
+            "SQL_TABLE": config["nwrs"]["sql_table_nwrs"],
+
+            "DATA_DIRECTORY": getenv("NETWORKED_DATA_PATH_DATA") 
+                + getenv("NETWORKED_DATA_PATH__SUBDRIECTORY_NWRS")
+        }
+
     else:
         raise ValueError (f"{ds} is not supported.")

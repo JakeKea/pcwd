@@ -18,3 +18,7 @@ sql_table_age = "wf_pc_pcwd_gpw_age"
 [pcn]
 pipeline_name = "PCN Data"
 sql_table_pcn = "wf_pc_pcwd_pcn"
+
+[nwrs]
+pipeline_name = "NWRS Metadata"
+sql_table_nwrs = "wf_pc_pcwd_nwrs"
