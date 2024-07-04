@@ -158,19 +158,20 @@ if env_debug["DEBUG_PCN"]:
 
             #Sometimes the file has inconsistent encoding so try both
             try:
-                env_gpw_pcn_in = pd.read_csv(file_path)
+                df_gpw_pcn_in = pd.read_csv(file_path)
             except:
-                env_gpw_pcn_in = pd.read_csv(file_path, encoding='ISO-8859-1')
+                df_gpw_pcn_in = pd.read_csv(file_path, encoding='ISO-8859-1')
 
             #Run main pipeline processing function
-            env_gpw_pcn_out = process_pcn(
-                env_gpw_pcn_in, file_date, env_gpw_pcn)
+            df_gpw_pcn_out = process_pcn(
+                df_gpw_pcn_in, file_date, env_gpw_pcn)
 
             #If enabled, upload the output data
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
-                upload_pipeline_data(env_gpw_pcn_out, env_gpw_pcn)
-
+                upload_pipeline_data(df_gpw_pcn_out, env_gpw_pcn)
+                
+#NWRS Pipeline
 if env_debug["DEBUG_NWRS"]:
     print("#########   Processing NWRS Metadata Pipeline   #########")
 
