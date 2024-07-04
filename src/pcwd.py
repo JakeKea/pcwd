@@ -179,7 +179,7 @@ if env_debug["DEBUG_NWRS"]:
     env_nwrs = import_settings(config, "nwrs")
 
     #Get data files:
-    ndfs = fetch_new_files(env_gpw_age["DATA_DIRECTORY"], ext=".csv")
+    ndfs = fetch_new_files(env_nwrs["DATA_DIRECTORY"], ext=".csv")
 
     #For each new file, execute the pipeline
     for ndf in ndfs:
@@ -203,4 +203,4 @@ if env_debug["DEBUG_NWRS"]:
             #If enabled, upload the output data
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
-                upload_pipeline_data(df_gpw_age, env_gpw_age)
+                upload_pipeline_data(df_nwrs, env_nwrs)
