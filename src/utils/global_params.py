@@ -72,6 +72,6 @@ def import_settings(config, ds):
             "DATA_DIRECTORY": getenv("NETWORKED_DATA_PATH_DATA") 
                 + getenv("NETWORKED_DATA_PATH__SUBDRIECTORY_NWRS")
         }
-
+        return params_nwrs
     else:
         raise ValueError (f"{ds} is not supported.")
