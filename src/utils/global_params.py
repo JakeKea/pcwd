@@ -11,6 +11,7 @@ def import_settings(config, ds):
                 "DEBUG_GPW_MAIN": {"True": True, "False": False}[getenv("DEBUG_GPW_MAIN")],
                 "DEBUG_GPW_AGE": {"True": True, "False": False}[getenv("DEBUG_GPW_AGE")],
                 "DEBUG_PCN": {"True": True, "False": False}[getenv("DEBUG_PCN")],
+                "DEBUG_NWRS": {"True": True, "False": False}[getenv("DEBUG_NWRS")],
                 "DEBUG_UPLOAD":{"True": True, "False": False}[getenv("DEBUG_UPLOAD")]
             }
         return params_debug
