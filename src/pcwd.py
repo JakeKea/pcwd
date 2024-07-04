@@ -10,6 +10,7 @@ from utils.global_params import *
 from utils.gpw_main import *
 from utils.gpw_age import *
 from utils.pcn import *
+from utils.nwrs import *
 from utils.network_management import *
 from utils.sandpit_management import *
 
@@ -170,3 +171,35 @@ if env_debug["DEBUG_PCN"]:
                 #Upload resulting dataframe
                 upload_pipeline_data(env_gpw_pcn_out, env_gpw_pcn)
 
+if env_debug["DEBUG_NWRS"]:
+    print("#########   Processing NWRS Metadata Pipeline   #########")
+
+    #Load pipeline env
+    env_nwrs = import_settings(config, "nwrs")
+
+    #Get data files:
+    ndfs = fetch_new_files(env_gpw_age["DATA_DIRECTORY"], ext=".csv")
+
+    #For each new file, execute the pipeline
+    for ndf in ndfs:
+
+        #Confirm the ndf has the time period in the name
+        file_date = get_date_from_filename(ndf, inc_day=True)
+        
+        if file_date:
+            #Fetch the data file
+            file_path = env_nwrs["DATA_DIRECTORY"] + ndf
+
+            #Sometimes the file has inconsistent encoding so try both
+            try:
+                df_nwrs = pd.read_csv(file_path)
+            except:
+                df_nwrs = pd.read_csv(file_path, encoding='ISO-8859-1')
+
+            #Run main pipeline processing function
+            df_nwrs = process_nwrs(df_nwrs, file_date, env_nwrs)
+
+            #If enabled, upload the output data
+            if env_debug["DEBUG_UPLOAD"]:
+                #Upload resulting dataframe
+                upload_pipeline_data(df_gpw_age, env_gpw_age)
