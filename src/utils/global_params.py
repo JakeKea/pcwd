@@ -12,7 +12,10 @@ def import_settings(config, ds):
                 "DEBUG_GPW_AGE": {"True": True, "False": False}[getenv("DEBUG_GPW_AGE")],
                 "DEBUG_PCN": {"True": True, "False": False}[getenv("DEBUG_PCN")],
                 "DEBUG_NWRS": {"True": True, "False": False}[getenv("DEBUG_NWRS")],
-                "DEBUG_UPLOAD":{"True": True, "False": False}[getenv("DEBUG_UPLOAD")]
+                "DEBUG_UPLOAD":{"True": True, "False": False}[getenv("DEBUG_UPLOAD")],
+                
+                "ARCHIVE_SOURCE":({"True": True, "False": False}
+                    [config["archive"]["archive_source"]])
             }
         return params_debug
     
@@ -28,7 +31,8 @@ def import_settings(config, ds):
             "SQL_TABLE_COLUMNMAP": config["gpw"]["main"]["sql_table_columnmap"],
 
             "DATA_DIRECTORY": getenv("NETWORKED_DATA_PATH_DATA") 
-                + getenv("NETWORKED_DATA_PATH__SUBDRIECTORY_GPW")
+                + getenv("NETWORKED_DATA_PATH__SUBDRIECTORY_GPW"),
+            "EXCEL_COLUMNMAP": getenv("EXCEL_COLUMNMAP")
         }
         return params_gpw_main
     
