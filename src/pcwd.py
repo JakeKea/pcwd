@@ -86,6 +86,7 @@ if env_debug["DEBUG_GPW_MAIN"]:
         
         if file_date:
             #Fetch the data file
+            data_dir = env_gpw_main["DATA_DIRECTORY"]
             file_path = env_gpw_main["DATA_DIRECTORY"] + ndf
             
             #Sometimes the file has inconsistent encoding so try both
@@ -101,6 +102,15 @@ if env_debug["DEBUG_GPW_MAIN"]:
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
                 upload_pipeline_data(df_gpw_main, env_gpw_main)
+
+                if (env_debug["ARCHIVE_SOURCE"] 
+                    and not env_debug["DEBUG_GPW_AGE"]):
+                    try:
+                        archive_data_file(ndf, data_dir)
+                    except FileExistsError:
+                        print(f"Unable to archive ecist file as there is",
+                             f"already a file named {ndf}",
+                             f"in the archive folder.")
 
 #GPW Age Pipeline
 if env_debug["DEBUG_GPW_AGE"]:
@@ -120,6 +130,7 @@ if env_debug["DEBUG_GPW_AGE"]:
         
         if file_date:
             #Fetch the data file
+            data_dir = env_gpw_age["DATA_DIRECTORY"]
             file_path = env_gpw_age["DATA_DIRECTORY"] + ndf
 
             #Sometimes the file has inconsistent encoding so try both
@@ -135,6 +146,14 @@ if env_debug["DEBUG_GPW_AGE"]:
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
                 upload_pipeline_data(df_gpw_age, env_gpw_age)
+
+                if env_debug["ARCHIVE_SOURCE"]:
+                    try:
+                        archive_data_file(ndf, data_dir)
+                    except FileExistsError:
+                        print(f"Unable to archive ecist file as there is",
+                             f"already a file named {ndf}",
+                             f"in the archive folder.")
 
 #PCN Pipeline
 if env_debug["DEBUG_PCN"]:
@@ -154,6 +173,7 @@ if env_debug["DEBUG_PCN"]:
         
         if file_date:
             #Fetch the data file
+            data_dir = env_gpw_pcn["DATA_DIRECTORY"]
             file_path = env_gpw_pcn["DATA_DIRECTORY"] + ndf
 
             #Sometimes the file has inconsistent encoding so try both
@@ -170,6 +190,14 @@ if env_debug["DEBUG_PCN"]:
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
                 upload_pipeline_data(df_gpw_pcn_out, env_gpw_pcn)
+
+                if env_debug["ARCHIVE_SOURCE"]:
+                    try:
+                        archive_data_file(ndf, data_dir)
+                    except FileExistsError:
+                        print(f"Unable to archive ecist file as there is",
+                             f"already a file named {ndf}",
+                             f"in the archive folder.")
                 
 #NWRS Pipeline
 if env_debug["DEBUG_NWRS"]:
@@ -189,7 +217,8 @@ if env_debug["DEBUG_NWRS"]:
         
         if file_date:
             #Fetch the data file
-            file_path = env_nwrs["DATA_DIRECTORY"] + ndf
+            data_dir = env_nwrs["DATA_DIRECTORY"]
+            file_path = data_dir + ndf
 
             #Sometimes the file has inconsistent encoding so try both
             try:
@@ -204,3 +233,11 @@ if env_debug["DEBUG_NWRS"]:
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
                 upload_pipeline_data(df_nwrs, env_nwrs)
+
+                if env_debug["ARCHIVE_SOURCE"]:
+                    try:
+                        archive_data_file(ndf, data_dir)
+                    except FileExistsError:
+                        print(f"Unable to archive ecist file as there is",
+                             f"already a file named {ndf}",
+                             f"in the archive folder.")
