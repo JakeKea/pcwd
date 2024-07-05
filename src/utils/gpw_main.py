@@ -48,7 +48,7 @@ def read_staff_roles(all_columns):
     return candidate_columns
 
 #Get a list of staff roles that are accounted for in the SQL column map
-def get_existing_sr_cols(env):
+def get_existing_sr_cols(env, ds):
 
     engine = snips.connect(env["SQL_ADDRESS"], env["SQL_DATABASE"])
 
@@ -56,14 +56,15 @@ def get_existing_sr_cols(env):
                        f"[{env["SQL_SCHEMA"]}].[{env["SQL_TABLE_COLUMNMAP"]}]")
     query = ("SELECT source_name " +
              f"FROM {columnmap_table} " +
-             "WHERE [ds] = 'gpw_main' AND [previously_flagged] IS NULL")
+             f"WHERE [ds] = '{ds}' AND [previously_flagged] IS NULL")
 
     return snips.execute_sfw(engine, query)
 
 #Flag staff role columns in the column map table to acknowledged they have been
 #previously flagged
-def flag_deprecated_column(sr, env):
+def flag_deprecated_column(sr, env, ds):
 
+    #Update SQL table
     today = datetime.today().strftime("%Y-%m-%d")
 
     engine = snips.connect(env["SQL_ADDRESS"], env["SQL_DATABASE"])
@@ -76,6 +77,22 @@ def flag_deprecated_column(sr, env):
              f"WHERE [source_name] = '{sr}'")
 
     snips.execute_query(engine, query)
+
+    #Update Excel reference file
+    df_column_map = pd.read_excel(
+        env["EXCEL_COLUMNMAP"], sheet_name="lookup", 
+        dtype={"previously_flagged":"str"})
+
+    file_columns = df_column_map.columns
+
+    df_column_map.loc[((df_column_map["source_name"]==sr)
+                       &(df_column_map["ds"]==ds), 
+                       "previously_flagged")] = today
+
+    df_column_map = df_column_map[file_columns]
+
+    df_column_map.to_excel(
+        env["EXCEL_COLUMNMAP"], sheet_name="lookup", index=False)
 
 #Process the main data from the gpw file
 def process_gpw_main(data, date_data, env):
@@ -92,7 +109,7 @@ def process_gpw_main(data, date_data, env):
 
     #Assess list of staff role columns
     ##Get existing mapping
-    df_columnmap = get_existing_sr_cols(env)
+    df_columnmap = get_existing_sr_cols(env, "gpw_main")
     existing_sr_cols = df_columnmap["source_name"].tolist()
 
     ##Flag any roles that are in the data but not the map
@@ -113,7 +130,7 @@ def process_gpw_main(data, date_data, env):
                 print("\nThe following roles are not found in the new data:")
             print("    ", sr)
             #For data no longer in the data, flag it in the columnmap table
-            flag_deprecated_column(sr, env)
+            flag_deprecated_column(sr, env, "gpw_main")
 
     #Format data for output
     ##Filter to just the context and sr columns
