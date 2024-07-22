@@ -18,8 +18,8 @@ def fetch_new_files(dir, ext=".xlsx"):
     return scanned_files
 
 #Archive the data file
-def archive_data_file(filename, dir, ext=".xlsx"):
+def archive_data_file(source_file, dest_dir, dest_file, ext=".xlsx"):
     #Rename the current file to archive it
-    old_filename = f"{dir}/{filename}"
-    new_filename = f"{dir}/archive/{filename}"
+    old_filename = f"{dest_dir}/{source_file}"
+    new_filename = f"{dest_dir}/archive/{dest_file}{ext}"
     rename(old_filename, new_filename)
