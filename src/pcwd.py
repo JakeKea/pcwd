@@ -15,7 +15,7 @@ from utils.network_management import *
 from utils.sandpit_management import *
 
 #Get the date from a given filename
-def get_date_from_filename(ndf, inc_day=False):
+def get_date_from_filename(ndf, pln, inc_day=False):
     
     #Look for the file date in the file name
     #This should be in the form of "{Month} {YYYY}", i.e. "March 2024"
@@ -36,13 +36,22 @@ def get_date_from_filename(ndf, inc_day=False):
 
                     #Check the characters are a numeric value
                     if bool(re.fullmatch(r'\d{2}', day_candidate)):
+                        #Convert to formatted date string (YYYY-MM-DD)
                         date_in_file = (
                             day_candidate + " " + month + " " + year_candidate)
                         file_date_date = datetime.strptime(
                             date_in_file, '%d %B %Y')
                         file_date_str = file_date_date.strftime("%Y-%m-%d")
-                        #Convert to formatted date string (YYYY-MM-DD)
-                        return file_date_str
+                        
+                        #Derrive the name for the archive file
+                        if "PCN+" in ndf or "PCN " in ndf:
+                            scope_data = "PCN"
+                        else:
+                            scope_data = "GP"
+                        filename_archive = (f"{pln} {scope_data} " + 
+                                            f"{file_date_str} - {date_in_file}")
+
+                        return file_date_str, filename_archive
                     else:
                         break
                 
@@ -51,7 +60,10 @@ def get_date_from_filename(ndf, inc_day=False):
                 file_date_date = datetime.strptime(date_in_file, '%B %Y')
                 file_date_str = file_date_date.strftime("%Y-%m-%d")
 
-                return file_date_str
+                #Derrive the name for the archive file
+                filename_archive = f"{pln} {file_date_str} - {date_in_file}"
+
+                return file_date_str, filename_archive
             
     print(f"Warning! No date found in the filename of '{ndf}'",
                 "so it was not processed.",
@@ -76,14 +88,15 @@ if env_debug["DEBUG_GPW_MAIN"]:
 
     #Get data files:
     ndfs = fetch_new_files(env_gpw_main["DATA_DIRECTORY"], ext=".csv")
-
+ 
     #For each new file, execute the pipeline
     for ndf in ndfs:
 
         print(ndf)
-
+        
         #Confirm the ndf has the time period in the name
-        file_date = get_date_from_filename(ndf)
+        file_date, filename_archive = get_date_from_filename(
+            ndf, env_gpw_main["PIPELINE_NAME"])
         
         if file_date:
             #Fetch the data file
@@ -102,17 +115,22 @@ if env_debug["DEBUG_GPW_MAIN"]:
             #If enabled, upload the output data
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
-                upload_pipeline_data(df_gpw_main, env_gpw_main)
+                res = upload_pipeline_data(df_gpw_main, env_gpw_main)
 
-                if (env_debug["ARCHIVE_SOURCE"] 
+                #If the upload was successful
+                ## And archiving is enabled through ARCHIVE_FORCE_GPW
+                ## And the gpw age pipeline isn't due to execute
+                if (res 
+                    and env_debug["ARCHIVE_FORCE_GPW"] 
                     and not env_debug["DEBUG_GPW_AGE"]):
                     try:
-                        archive_data_file(ndf, data_dir)
+                        archive_data_file(
+                            ndf, data_dir, filename_archive, ".csv")
                     except FileExistsError:
                         print(f"Unable to archive ecist file as there is",
-                             f"already a file named {ndf}",
-                             f"in the archive folder.")                  
-    print()
+                                f"already a file named {ndf}",
+                                f"in the archive folder.")                  
+        print()
 
 #GPW Age Pipeline
 if env_debug["DEBUG_GPW_AGE"]:
@@ -130,7 +148,8 @@ if env_debug["DEBUG_GPW_AGE"]:
         print(ndf)
 
         #Confirm the ndf has the time period in the name
-        file_date = get_date_from_filename(ndf)
+        file_date, filename_archive = get_date_from_filename(
+            ndf, env_gpw_age["PIPELINE_NAME"])
         
         if file_date:
             #Fetch the data file
@@ -149,15 +168,23 @@ if env_debug["DEBUG_GPW_AGE"]:
             #If enabled, upload the output data
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
-                upload_pipeline_data(df_gpw_age, env_gpw_age)
+                res = upload_pipeline_data(df_gpw_age, env_gpw_age)
 
-                if env_debug["ARCHIVE_SOURCE"]:
+                #If the upload was successful
+                ## And the archive functionality is enabled
+                ### Either through ARCHIVE_SOURCE and both pipelines are enables
+                ### Or through ARCHIVE_FORCE_GPW
+                if (res and 
+                    ((env_debug["ARCHIVE_SOURCE"] 
+                    and env_debug["DEBUG_GPW_MAIN"])
+                    or env_debug["ARCHIVE_FORCE_GPW"])):
                     try:
-                        archive_data_file(ndf, data_dir)
+                        archive_data_file(
+                            ndf, data_dir, filename_archive, ".csv")
                     except FileExistsError:
                         print(f"Unable to archive ecist file as there is",
-                             f"already a file named {ndf}",
-                             f"in the archive folder.")
+                                f"already a file named {ndf}",
+                                f"in the archive folder.")
     print()
 
 #PCN Pipeline
@@ -176,8 +203,9 @@ if env_debug["DEBUG_PCN"]:
         print(ndf)
 
         #Confirm the ndf has the time period in the name
-        file_date = get_date_from_filename(ndf)
-        
+        file_date, filename_archive = get_date_from_filename(
+            ndf, env_pcn["PIPELINE_NAME"])
+
         if file_date:
             #Fetch the data file
             data_dir = env_pcn["DATA_DIRECTORY"]
@@ -196,15 +224,18 @@ if env_debug["DEBUG_PCN"]:
             #If enabled, upload the output data
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
-                upload_pipeline_data(df_pcn_out, env_pcn)
+                res = upload_pipeline_data(df_pcn_out, env_pcn)
 
-                if env_debug["ARCHIVE_SOURCE"]:
+                #If the upload was successful
+                ##And archiving is enabled
+                if res and env_debug["ARCHIVE_SOURCE"]:
                     try:
-                        archive_data_file(ndf, data_dir)
+                        archive_data_file(
+                            ndf, data_dir, filename_archive, ".csv")
                     except FileExistsError:
                         print(f"Unable to archive ecist file as there is",
-                             f"already a file named {ndf}",
-                             f"in the archive folder.")
+                                f"already a file named {ndf}",
+                                f"in the archive folder.")
     print()
                 
 #NWRS Pipeline
@@ -223,7 +254,8 @@ if env_debug["DEBUG_NWRS"]:
         print(ndf)
 
         #Confirm the ndf has the time period in the name
-        file_date = get_date_from_filename(ndf, inc_day=True)
+        file_date, filename_archive = get_date_from_filename(
+            ndf, env_nwrs["PIPELINE_NAME"], inc_day=True)
         
         if file_date:
             #Fetch the data file
@@ -242,13 +274,16 @@ if env_debug["DEBUG_NWRS"]:
             #If enabled, upload the output data
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
-                upload_pipeline_data(df_nwrs, env_nwrs)
+                res = upload_pipeline_data(df_nwrs, env_nwrs)
 
-                if env_debug["ARCHIVE_SOURCE"]:
+                #If the upload was successful
+                ##And archiving is enabled
+                if res and env_debug["ARCHIVE_SOURCE"]:
                     try:
-                        archive_data_file(ndf, data_dir)
+                        archive_data_file(
+                            ndf, data_dir, filename_archive, ".csv")
                     except FileExistsError:
                         print(f"Unable to archive ecist file as there is",
-                             f"already a file named {ndf}",
-                             f"in the archive folder.")
+                                f"already a file named {ndf}",
+                                f"in the archive folder.")
     print()
