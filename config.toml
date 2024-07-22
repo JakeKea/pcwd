@@ -1,8 +1,5 @@
 title = "Primary Care Workforce Dashboard"
 
-[archive]
-archive_source = "False"
-
 [database]
 sql_database = "Data_Lab_NCL_Dev"
 sql_schema = "JakeK"

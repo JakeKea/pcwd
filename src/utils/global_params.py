@@ -8,14 +8,19 @@ def import_settings(config, ds):
 
     if ds == "debug":
         params_debug ={
-                "DEBUG_GPW_MAIN": {"True": True, "False": False}[getenv("DEBUG_GPW_MAIN")],
-                "DEBUG_GPW_AGE": {"True": True, "False": False}[getenv("DEBUG_GPW_AGE")],
-                "DEBUG_PCN": {"True": True, "False": False}[getenv("DEBUG_PCN")],
-                "DEBUG_NWRS": {"True": True, "False": False}[getenv("DEBUG_NWRS")],
-                "DEBUG_UPLOAD":{"True": True, "False": False}[getenv("DEBUG_UPLOAD")],
+                "DEBUG_GPW_MAIN": (
+                    {"True": True, "False": False}[getenv("DEBUG_GPW_MAIN")]),
+                "DEBUG_GPW_AGE": (
+                    {"True": True, "False": False}[getenv("DEBUG_GPW_AGE")]),
+                "DEBUG_PCN": (
+                    {"True": True, "False": False}[getenv("DEBUG_PCN")]),
+                "DEBUG_NWRS": (
+                    {"True": True, "False": False}[getenv("DEBUG_NWRS")]),
                 
-                "ARCHIVE_SOURCE":({"True": True, "False": False}
-                    [config["archive"]["archive_source"]])
+                "DEBUG_UPLOAD":(
+                    {"True": True, "False": False}[getenv("DEBUG_UPLOAD")]),
+                "ARCHIVE_SOURCE": (
+                    {"True": True, "False": False}[getenv("DEBUG_ARCHIVE")]),
             }
         return params_debug
     
