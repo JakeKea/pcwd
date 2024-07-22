@@ -20,6 +20,8 @@ def upload_pipeline_data(data, env, chunks=100):
 
         print(f"{pipeline} pipeline data uploaded successfully.\n")
 
+        return True
+
     except pyodbc.OperationalError:
         print(f"\nConnection issue when uploading the {pipeline} pipeline.\n")
     except sqlalchemy.exc.IntegrityError:
@@ -32,3 +34,5 @@ def upload_pipeline_data(data, env, chunks=100):
 
     except pyodbc.ProgrammingError as e:
         raise Exception (e)
+    
+    return False
