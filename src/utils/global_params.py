@@ -21,6 +21,9 @@ def import_settings(config, ds):
                     {"True": True, "False": False}[getenv("DEBUG_UPLOAD")]),
                 "ARCHIVE_SOURCE": (
                     {"True": True, "False": False}[getenv("DEBUG_ARCHIVE")]),
+                "ARCHIVE_FORCE_GPW": ( 
+                    {"True": True, "False": False}[getenv(
+                        "DEBUG_ARCHIVE_FORCE_GPW")]),
             }
         return params_debug
     
