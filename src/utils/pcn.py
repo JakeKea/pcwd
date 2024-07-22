@@ -39,11 +39,22 @@ def process_pcn(data, date_data, env):
                  "FTE": "fte",
                  "HC": "hc"})
     
-    
+    #Format the data in the same format as the GPW data
+    df_pcn_output_fte = df_pcn_output.copy().drop(columns=["hc"])
+    df_pcn_output_fte["type"] = "FTE"
+    df_pcn_output_fte = df_pcn_output_fte.rename(
+        columns={"fte":"staff_in_post"})
+
+    df_pcn_output_hc = df_pcn_output.copy().drop(columns=["fte"])
+    df_pcn_output_hc["type"] = "HC"
+    df_pcn_output_hc = df_pcn_output_hc.rename(
+        columns={"hc":"staff_in_post"})
+
+    df_pcn_output_both = pd.concat([df_pcn_output_fte, df_pcn_output_hc])
 
     #Add date columns
-    df_pcn_output["date_data"] = date_data
-    df_pcn_output["date_extract"] = datetime.today().strftime("%Y-%m-%d")
+    df_pcn_output_both["date_data"] = date_data
+    df_pcn_output_both["date_extract"] = datetime.today().strftime("%Y-%m-%d")
 
     #Return data
-    return df_pcn_output
+    return df_pcn_output_both
