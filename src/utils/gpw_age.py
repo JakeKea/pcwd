@@ -60,6 +60,12 @@ def process_gpw_age(data, date_data, env):
     df_gpw_output = df_gpw_output.dropna(subset=['staff_in_post'])
     #Remove rows with 0 SIP
     df_gpw_output = df_gpw_output[df_gpw_output['staff_in_post'] != 0]
+    #Remove rows with ND SIP
+    df_gpw_output = df_gpw_output[df_gpw_output['staff_in_post'] != "ND"]
+    #Force convert column to float 
+    #(For files with "ND" as FTE values as py misreads these as text columns)
+    df_gpw_output['staff_in_post'] = (
+        df_gpw_output['staff_in_post'].astype(float))
 
     #Return data
     return df_gpw_output

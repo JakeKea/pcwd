@@ -18,7 +18,7 @@ def upload_pipeline_data(data, env, chunks=100):
         snips.upload_to_sql(data, engine, env["SQL_TABLE"], env["SQL_SCHEMA"], 
                             replace=False, chunks=chunks)
 
-        print(f"\n{pipeline} pipeline data uploaded successfully.\n")
+        print(f"{pipeline} pipeline data uploaded successfully.\n")
 
     except pyodbc.OperationalError:
         print(f"\nConnection issue when uploading the {pipeline} pipeline.\n")
