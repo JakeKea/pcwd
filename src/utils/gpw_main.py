@@ -19,7 +19,10 @@ def read_staff_roles(all_columns):
                               "TOTAL_PATIENTS", "TOTAL_UNKNOWN_GENDER"])
     
     for pc in patient_total_columns:
-        candidate_columns.remove(pc)
+        try:
+            candidate_columns.remove(pc)
+        except ValueError as e:
+            pass
 
     #Remove Ethnicity (COQ) Columns
     candidate_columns = (
@@ -42,8 +45,12 @@ def read_staff_roles(all_columns):
             for s in sg_cols_suffix:
                 sg_cols.append(p + b + s)
 
+    #Attempt to remove the unused GP staff group columns
     for sg in sg_cols:
-        candidate_columns.remove(sg)
+        try:
+            candidate_columns.remove(sg)
+        except:
+            pass
 
     return candidate_columns
 
@@ -54,11 +61,27 @@ def get_existing_sr_cols(env, ds):
 
     columnmap_table = (f"[{env["SQL_DATABASE"]}]." +
                        f"[{env["SQL_SCHEMA"]}].[{env["SQL_TABLE_COLUMNMAP"]}]")
-    query = ("SELECT source_name " +
+    query = ("SELECT source_name, " +
+             f"CASE WHEN [previously_flagged] IS NULL THEN 1 ELSE 0 END AS f " +
              f"FROM {columnmap_table} " +
-             f"WHERE [ds] = '{ds}' AND [previously_flagged] IS NULL")
+             f"WHERE [ds] = '{ds}'")
 
     return snips.execute_sfw(engine, query)
+
+#Return a boolean value to determine if column flagging should occur
+##Based on if the file contains data newer than the data in the database
+def check_new_data(date_data, env):
+    engine = snips.connect(env["SQL_ADDRESS"], env["SQL_DATABASE"])
+
+    main_table = (f"[{env["SQL_DATABASE"]}]." +
+                       f"[{env["SQL_SCHEMA"]}].[{env["SQL_TABLE"]}]")
+    
+    query = ("SELECT MAX([date_data]) " +
+             f"FROM {main_table}")
+
+    res = snips.execute_sfw(engine, query)
+
+    return res.values[0][0] < date_data
 
 #Flag staff role columns in the column map table to acknowledged they have been
 #previously flagged
@@ -94,6 +117,7 @@ def flag_deprecated_column(sr, env, ds):
     df_column_map.to_excel(
         env["EXCEL_COLUMNMAP"], sheet_name="lookup", index=False)
 
+
 #Process the main data from the gpw file
 def process_gpw_main(data, date_data, env):
     
@@ -109,28 +133,33 @@ def process_gpw_main(data, date_data, env):
 
     #Assess list of staff role columns
     ##Get existing mapping
-    df_columnmap = get_existing_sr_cols(env, "gpw_main")
-    existing_sr_cols = df_columnmap["source_name"].tolist()
+    res = get_existing_sr_cols(env, "gpw_main")
+    existing_sr_cols_unflagged = res[res['f'] == 1]['source_name'].tolist()
+    existing_sr_cols_all =  res['source_name'].tolist()
 
     ##Flag any roles that are in the data but not the map
     bool_first_missing = True
     for sr in gpw_sr_cols:
-        if sr not in existing_sr_cols:
+        if sr not in existing_sr_cols_all:
             if bool_first_missing:
                 bool_first_missing = False
-                print("\nThe following roles are not mapped to any output group:")
+                print()
+                print("The following roles are not mapped to any output group:")
             print("    ", sr)
 
-    ##Flag any roles that are in the map but not the data
-    bool_first_missing = True
-    for sr in existing_sr_cols:
-        if sr not in gpw_sr_cols:
-            if bool_first_missing:
-                bool_first_missing = False
-                print("\nThe following roles are not found in the new data:")
-            print("    ", sr)
-            #For data no longer in the data, flag it in the columnmap table
-            flag_deprecated_column(sr, env, "gpw_main")
+    ##If this file contains data newer than the warehouse contents
+    if check_new_data(date_data, env):
+        ###Flag any roles that are in the map but not the data
+        bool_first_missing = True
+        for sr in existing_sr_cols_unflagged:
+            if sr not in gpw_sr_cols:
+                if bool_first_missing:
+                    bool_first_missing = False
+                    print()
+                    print("The following roles are not found in the new data:")
+                print("    ", sr)
+                #For data no longer in the data, flag it in the columnmap table
+                flag_deprecated_column(sr, env, "gpw_main")
 
     #Format data for output
     ##Filter to just the context and sr columns
@@ -147,6 +176,12 @@ def process_gpw_main(data, date_data, env):
     df_gpw_output = df_gpw_output.dropna(subset=['staff_in_post'])
     #Remove rows with 0 SIP
     df_gpw_output = df_gpw_output[df_gpw_output['staff_in_post'] != 0]
+    #Remove rows with ND SIP
+    df_gpw_output = df_gpw_output[df_gpw_output['staff_in_post'] != "ND"]
+    #Force convert column to float 
+    #(For files with "ND" as FTE values as py misreads these as text columns)
+    df_gpw_output['staff_in_post'] = (
+        df_gpw_output['staff_in_post'].astype(float))
 
     #Return data
     return df_gpw_output
