@@ -61,7 +61,6 @@ def get_date_from_filename(ndf, inc_day=False):
 
     return False
 
-
 #Load config file
 config = toml.load("./config.toml")
 #Load env file
@@ -70,7 +69,7 @@ env_debug = import_settings(config, "debug")
 
 #GPW Main Pipeline
 if env_debug["DEBUG_GPW_MAIN"]:
-    print("#########   Processing GPW Main Pipeline   #########")
+    print("#########   Processing GPW Main Pipeline   #########\n")
 
     #Load pipeline env
     env_gpw_main = import_settings(config, "gpw_main")
@@ -80,6 +79,8 @@ if env_debug["DEBUG_GPW_MAIN"]:
 
     #For each new file, execute the pipeline
     for ndf in ndfs:
+
+        print(ndf)
 
         #Confirm the ndf has the time period in the name
         file_date = get_date_from_filename(ndf)
@@ -110,11 +111,12 @@ if env_debug["DEBUG_GPW_MAIN"]:
                     except FileExistsError:
                         print(f"Unable to archive ecist file as there is",
                              f"already a file named {ndf}",
-                             f"in the archive folder.")
+                             f"in the archive folder.")                  
+    print()
 
 #GPW Age Pipeline
 if env_debug["DEBUG_GPW_AGE"]:
-    print("#########   Processing GPW Age Pipeline   #########")
+    print("#########   Processing GPW Age Pipeline   #########\n")
 
     #Load pipeline env
     env_gpw_age = import_settings(config, "gpw_age")
@@ -124,6 +126,8 @@ if env_debug["DEBUG_GPW_AGE"]:
 
     #For each new file, execute the pipeline
     for ndf in ndfs:
+
+        print(ndf)
 
         #Confirm the ndf has the time period in the name
         file_date = get_date_from_filename(ndf)
@@ -154,42 +158,45 @@ if env_debug["DEBUG_GPW_AGE"]:
                         print(f"Unable to archive ecist file as there is",
                              f"already a file named {ndf}",
                              f"in the archive folder.")
+    print()
 
 #PCN Pipeline
 if env_debug["DEBUG_PCN"]:
     print("#########   Processing PCN Pipeline   #########")
 
     #Load pipeline env
-    env_gpw_pcn = import_settings(config, "pcn")
+    env_pcn = import_settings(config, "pcn")
 
     #Get data files:
-    ndfs = fetch_new_files(env_gpw_pcn["DATA_DIRECTORY"], ext=".csv")
+    ndfs = fetch_new_files(env_pcn["DATA_DIRECTORY"], ext=".csv")
 
     #For each new file, execute the pipeline
     for ndf in ndfs:
+
+        print(ndf)
 
         #Confirm the ndf has the time period in the name
         file_date = get_date_from_filename(ndf)
         
         if file_date:
             #Fetch the data file
-            data_dir = env_gpw_pcn["DATA_DIRECTORY"]
-            file_path = env_gpw_pcn["DATA_DIRECTORY"] + ndf
+            data_dir = env_pcn["DATA_DIRECTORY"]
+            file_path = env_pcn["DATA_DIRECTORY"] + ndf
 
             #Sometimes the file has inconsistent encoding so try both
             try:
-                df_gpw_pcn_in = pd.read_csv(file_path)
+                df_pcn_in = pd.read_csv(file_path)
             except:
-                df_gpw_pcn_in = pd.read_csv(file_path, encoding='ISO-8859-1')
+                df_pcn_in = pd.read_csv(file_path, encoding='ISO-8859-1')
 
             #Run main pipeline processing function
-            df_gpw_pcn_out = process_pcn(
-                df_gpw_pcn_in, file_date, env_gpw_pcn)
+            df_pcn_out = process_pcn(
+                df_pcn_in, file_date, env_pcn)
 
             #If enabled, upload the output data
             if env_debug["DEBUG_UPLOAD"]:
                 #Upload resulting dataframe
-                upload_pipeline_data(df_gpw_pcn_out, env_gpw_pcn)
+                upload_pipeline_data(df_pcn_out, env_pcn)
 
                 if env_debug["ARCHIVE_SOURCE"]:
                     try:
@@ -198,6 +205,7 @@ if env_debug["DEBUG_PCN"]:
                         print(f"Unable to archive ecist file as there is",
                              f"already a file named {ndf}",
                              f"in the archive folder.")
+    print()
                 
 #NWRS Pipeline
 if env_debug["DEBUG_NWRS"]:
@@ -211,6 +219,8 @@ if env_debug["DEBUG_NWRS"]:
 
     #For each new file, execute the pipeline
     for ndf in ndfs:
+
+        print(ndf)
 
         #Confirm the ndf has the time period in the name
         file_date = get_date_from_filename(ndf, inc_day=True)
@@ -241,3 +251,4 @@ if env_debug["DEBUG_NWRS"]:
                         print(f"Unable to archive ecist file as there is",
                              f"already a file named {ndf}",
                              f"in the archive folder.")
+    print()
